@@ -19,7 +19,6 @@ def positiveBinaryConversion(num):
     while num > 1:
         num = num // 2
         stack.append(num)
-    print(stack)  # В Python 3 print - это функция
     stack.reverse()
     for binNum in stack:
         binary.append(str(binNum % 2))
@@ -152,31 +151,89 @@ def rightShift(a, q):
     shifted = [num[0]] + list(num[:-1])
     return "".join(shifted)[:8], "".join(shifted)[8:]
 
+
+class BinaryNumber:
+    def __init__(self, value):
+        if isinstance(value, int):
+            self.binary = convertToBinary(value)
+        elif isinstance(value, str) and all(c in ('0', '1') for c in value):
+            self.binary = value.zfill(8)  # Нормализация длины
+        else:
+            raise ValueError("Invalid input type")
+
+    def __repr__(self):
+        return f"{self.binary} ({self.to_int()})"
+
+    def __add__(self, other):
+        other = self._ensure_binary(other)
+        result = addBinary(self.binary, other.binary)
+        return BinaryNumber(result)
+
+    def __sub__(self, other):
+        return self + (-other)
+
+    def __mul__(self, other):
+        other = self._ensure_binary(other)
+        result = multByBooth(self.binary, other.binary)
+        return BinaryNumber(result)
+
+    def __truediv__(self, other):
+        other = self._ensure_binary(other)
+        quotient, remainder = binary_signed_divide(self.binary, other.binary)
+        return BinaryNumber(quotient), BinaryNumber(remainder)
+
+    def __neg__(self):
+        negated = twoscomplimentForSub(self.binary)
+        return BinaryNumber(negated)
+
+    def _ensure_binary(self, other):
+        if not isinstance(other, BinaryNumber):
+            return BinaryNumber(other)
+        return other
+
+    def to_int(self):
+        return binaryToInt(self.binary)
+
+
+# Модифицированная функция умножения с полным результатом
 def multByBooth(m, q):
     a = "00000000"
-    qNeg1 = "0"
-    qNeg0 = q[-1]
-    print(a, q, qNeg1)
+    q_neg1 = "0"
+    q_neg0 = q[-1]
     for _ in range(len(m)):
-        if qNeg1 == qNeg0:
-            pass
-        elif qNeg0 == "1" and qNeg1 == "0":
+        if q_neg0 == "1" and q_neg1 == "0":
             a = addBinary(a, twoscomplimentForSub(m))
-        elif qNeg0 == "0" and qNeg1 == "1":
+        elif q_neg0 == "0" and q_neg1 == "1":
             a = addBinary(a, m)
-        qNeg1 = qNeg0
+        q_neg1 = q_neg0
         a, q = rightShift(a, q)
-        qNeg0 = q[-1]
-        print(a, q, qNeg1)
-    return q
+        q_neg0 = q[-1]
+    full_result = a + q  # Объединяем регистры A и Q
+    return full_result
 
-def main():
-    binaryNum1 = convertToBinary(int(input("Enter the first number: ")))
-    binaryNum2 = convertToBinary(int(input("Enter the second number: ")))
-    print("Binary form is", binaryNum1)
-    print("Binary form is", binaryNum2)
-    print(multByBooth(binaryNum1, binaryNum2))
-    quotient, remainder = binary_signed_divide(binaryNum1, binaryNum2)
-    print("Division Result - Quotient:", quotient, "Remainder:", remainder)
+
+# Остальные функции остаются без изменений
+# [Здесь должны быть все ваши оригинальные функции]
+
+# Пример использования
 if __name__ == "__main__":
-    main()
+    a = BinaryNumber(5)
+    b = BinaryNumber(3)
+
+    print("\nСложение:")
+    res_add = a + b
+    print(res_add)
+
+    print("\nВычитание:")
+    res_sub = a - b
+    print(res_sub)
+
+    print("\nУмножение:")
+    res_mul = a * b
+    print(res_mul)
+
+
+    print("\nДеление:")
+    res_div, rem_div = a / b
+    print("Частное:", res_div)
+    print("Остаток:", rem_div)
