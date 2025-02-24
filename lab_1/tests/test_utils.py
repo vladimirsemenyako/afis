@@ -1,7 +1,7 @@
 import unittest
 import lab_1.api as api
 
-class MyTestCase(unittest.TestCase):
+class BinaryTest(unittest.TestCase):
     def test_positive_binary_conversion(self):
         binary_num = str(api.BinaryNumber(7))
         self.assertEqual(binary_num, '00000111 (7)')
@@ -29,5 +29,10 @@ class MyTestCase(unittest.TestCase):
         binary_num_1 = api.BinaryNumber(-7)
         binary_num_2 = api.BinaryNumber(2)
         self.assertEqual(str(binary_num_1 - binary_num_2), '11110111 (-9)')
+
+    def test_ieee754(self):
+        num_1 = api.IEEE754Float(4.6)
+        num_2 = api.IEEE754Float(4.4)
+        self.assertEqual(str(num_1 + num_2), 'IEEE-754: 01000001000100000000000000000000 | Float: 9.0')
 if __name__ == '__main__':
     unittest.main()

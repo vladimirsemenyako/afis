@@ -1,108 +1,8 @@
-def increment_binary_by_one(num):
-    num.reverse()
-    if num[0] == '0':
-        num[0] = '1'
-    else:
-        num[0] = '0'
-        for i in range(1, len(num)):
-            if num[i] == '0':
-                num[i] = '1'
-                break
-            else:
-                num[i] = '0'
-    num.reverse()
-    return num
-
-def positive_binary_conversion(num):
-    stack = [num]
-    binary = []
-    while num > 1:
-        num //= 2
-        stack.append(num)
-    stack.reverse()
-    for value in stack:
-        binary.append(str(value % 2))
-    while len(binary) < 8:
-        binary.insert(0, "0")
-    return "".join(binary)
-
-def twos_complement(num):
-    binary = []
-    for bit in positive_binary_conversion(-num):
-        binary.append('0' if bit == '1' else '1')
-    binary = increment_binary_by_one(binary)
-    return "".join(binary)
-
-def twos_complement_for_sub(num):
-    binary = []
-    num_list = list(num)
-    for bit in num_list:
-        binary.append('0' if bit == '1' else '1')
-    binary = increment_binary_by_one(binary)
-    return "".join(binary)
-
-def convert_to_binary(num):
-    return positive_binary_conversion(num) if num >= 0 else twos_complement(num)
-
-def binary_to_int(binary_str):
-    length = len(binary_str)
-    if binary_str[0] == '1':
-        inverted = ''.join(['1' if c == '0' else '0' for c in binary_str])
-        num = sum((1 << (length - 1 - i)) for i in range(length) if inverted[i] == '1')
-        return -num - 1
-    return sum((1 << (length - 1 - i)) for i in range(length) if binary_str[i] == '1')
-
-def binary_divide_with_fraction(dividend, divisor, frac_digits=5):
-    if divisor == 0:
-        raise ZeroDivisionError("Division by zero")
-    total_bits = 8 + frac_digits
-    result = dividend / divisor
-    scaled = int(round(result * (2 ** frac_digits)))
-    if scaled < 0:
-        scaled = (1 << total_bits) + scaled
-    fixed_bin = format(scaled, f'0{total_bits}b')
-    return fixed_bin[:8] + '.' + fixed_bin[8:]
-
-def add_binary(num1, num2):
-    num1, num2 = list(num1), list(num2)
-    added = []
-    carry = 0
-    for i in range(len(num1) - 1, -1, -1):
-        if num1[i] == '0' and num2[i] == '0':
-            added.append('1' if carry else '0')
-            carry = 0
-        elif (num1[i], num2[i]) in [('0', '1'), ('1', '0')]:
-            added.append('0' if carry else '1')
-        else:
-            added.append('1' if carry else '0')
-            carry = 1
-    added.reverse()
-    return "".join(added)
-
-def right_shift(a, q):
-    num = a + q
-    shifted = [num[0]] + list(num[:-1])
-    return "".join(shifted)[:8], "".join(shifted)[8:]
-
-def multiply_by_booth(m, q):
-    a = "00000000"
-    q_neg1 = "0"
-    q_neg0 = q[-1]
-    for _ in range(len(m)):
-        if q_neg0 == "1" and q_neg1 == "0":
-            a = add_binary(a, twos_complement_for_sub(m))
-        elif q_neg0 == "0" and q_neg1 == "1":
-            a = add_binary(a, m)
-        q_neg1 = q_neg0
-        a, q = right_shift(a, q)
-        q_neg0 = q[-1]
-    return a + q
-
 class BinaryNumber:
     def __init__(self, value):
         if isinstance(value, int):
-            self.binary = convert_to_binary(value)
-        elif isinstance(value, str) and all(c in ('0', '1') for c in value):
+            self.binary = BinaryNumber._convert_to_binary(value)
+        elif isinstance(value, str) and set(value) <= {'0', '1'}:
             self.binary = value.zfill(8)
         else:
             raise ValueError("Invalid input type")
@@ -112,24 +12,196 @@ class BinaryNumber:
 
     def __add__(self, other):
         other = self._ensure_binary(other)
-        return BinaryNumber(add_binary(self.binary, other.binary))
+        return BinaryNumber(BinaryNumber._add_binary(self.binary, other.binary))
 
     def __sub__(self, other):
         return self + (-other)
 
     def __mul__(self, other):
         other = self._ensure_binary(other)
-        return BinaryNumber(multiply_by_booth(self.binary, other.binary))
+        return BinaryNumber(BinaryNumber._multiply_by_booth(self.binary, other.binary))
 
+    # Метод деления возвращает строку с бинарным представлением результата (целая часть и дробь)
     def __truediv__(self, other):
         other = self._ensure_binary(other)
-        return binary_divide_with_fraction(self.to_int(), other.to_int())
+        return BinaryNumber._binary_divide_with_fraction(self.to_int(), other.to_int())
 
     def __neg__(self):
-        return BinaryNumber(twos_complement_for_sub(self.binary))
+        return BinaryNumber(BinaryNumber._twos_complement_for_sub(self.binary))
 
     def _ensure_binary(self, other):
         return other if isinstance(other, BinaryNumber) else BinaryNumber(other)
 
     def to_int(self):
-        return binary_to_int(self.binary)
+        return BinaryNumber._binary_to_int(self.binary)
+
+    # Вспомогательные методы (все методы ниже являются статическими)
+    @staticmethod
+    def _increment_binary_by_one(num_list):
+        num_list.reverse()
+        if num_list[0] == '0':
+            num_list[0] = '1'
+        else:
+            num_list[0] = '0'
+            for i in range(1, len(num_list)):
+                if num_list[i] == '0':
+                    num_list[i] = '1'
+                    break
+                else:
+                    num_list[i] = '0'
+        num_list.reverse()
+        return num_list
+
+    @staticmethod
+    def _positive_binary_conversion(num):
+        stack = [num]
+        binary = []
+        while num > 1:
+            num //= 2
+            stack.append(num)
+        stack.reverse()
+        for value in stack:
+            binary.append(str(value % 2))
+        while len(binary) < 8:
+            binary.insert(0, "0")
+        return "".join(binary)
+
+    @staticmethod
+    def _twos_complement(num):
+        binary = []
+        pos_conv = BinaryNumber._positive_binary_conversion(-num)
+        for bit in pos_conv:
+            binary.append('0' if bit == '1' else '1')
+        binary = BinaryNumber._increment_binary_by_one(list(binary))
+        return "".join(binary)
+
+    @staticmethod
+    def _twos_complement_for_sub(binary_str):
+        binary = []
+        for bit in binary_str:
+            binary.append('0' if bit == '1' else '1')
+        binary = BinaryNumber._increment_binary_by_one(binary)
+        return "".join(binary)
+
+    @staticmethod
+    def _convert_to_binary(num):
+        if num >= 0:
+            return BinaryNumber._positive_binary_conversion(num)
+        else:
+            return BinaryNumber._twos_complement(num)
+
+    @staticmethod
+    def _binary_to_int(binary_str):
+        length = len(binary_str)
+        if binary_str[0] == '1':
+            inverted = ''.join(['1' if c == '0' else '0' for c in binary_str])
+            num = sum((1 << (length - 1 - i)) for i, c in enumerate(inverted) if c == '1')
+            return -num - 1
+        else:
+            return sum((1 << (length - 1 - i)) for i, c in enumerate(binary_str) if c == '1')
+
+    @staticmethod
+    def _binary_divide_with_fraction(dividend, divisor, frac_digits=5):
+        if divisor == 0:
+            raise ZeroDivisionError("Division by zero")
+        total_bits = 8 + frac_digits
+        result = dividend / divisor
+        scaled = int(round(result * (2 ** frac_digits)))
+        if scaled < 0:
+            scaled = (1 << total_bits) + scaled
+        fixed_bin = format(scaled, f'0{total_bits}b')
+        return fixed_bin[:8] + '.' + fixed_bin[8:]
+
+    @staticmethod
+    def _add_binary(num1, num2):
+        num1_list = list(num1)
+        num2_list = list(num2)
+        added = []
+        carry = 0
+        for i in range(len(num1_list) - 1, -1, -1):
+            if num1_list[i] == '0' and num2_list[i] == '0':
+                added.append('1' if carry else '0')
+                carry = 0
+            elif (num1_list[i], num2_list[i]) in [('0', '1'), ('1', '0')]:
+                added.append('0' if carry else '1')
+            else:
+                added.append('1' if carry else '0')
+                carry = 1
+        added.reverse()
+        return "".join(added)
+
+    @staticmethod
+    def _right_shift(a, q):
+        num = a + q
+        shifted = [num[0]] + list(num[:-1])
+        return "".join(shifted)[:8], "".join(shifted)[8:]
+
+    @staticmethod
+    def _multiply_by_booth(m, q):
+        a = "00000000"
+        q_neg1 = "0"
+        q_neg0 = q[-1]
+        for _ in range(len(m)):
+            if q_neg0 == "1" and q_neg1 == "0":
+                a = BinaryNumber._add_binary(a, BinaryNumber._twos_complement_for_sub(m))
+            elif q_neg0 == "0" and q_neg1 == "1":
+                a = BinaryNumber._add_binary(a, m)
+            q_neg1 = q_neg0
+            a, q = BinaryNumber._right_shift(a, q)
+            q_neg0 = q[-1]
+        return a + q
+
+
+class IEEE754Float:
+    def __init__(self, value):
+        if isinstance(value, float):
+            self.value = value
+            self.bits = IEEE754Float._float_to_binary(value)
+        elif isinstance(value, str) and len(value) == 32 and set(value) <= {'0', '1'}:
+            self.bits = value
+            self.value = IEEE754Float._binary_to_float(value)
+        else:
+            raise ValueError("Invalid input type. Provide a float or a 32-bit binary string.")
+
+    def __add__(self, other):
+        if not isinstance(other, IEEE754Float):
+            other = IEEE754Float(other)
+        # Извлекаем составляющие (поддерживаются только положительные числа)
+        sign1, exp1, frac1 = self.bits[0], int(self.bits[1:9], 2), self.bits[9:]
+        sign2, exp2, frac2 = other.bits[0], int(other.bits[1:9], 2), other.bits[9:]
+        if sign1 != '0' or sign2 != '0':
+            raise ValueError("Only positive numbers are supported")
+        M1 = (1 << 23) | int(frac1, 2) if exp1 != 0 else int(frac1, 2)
+        M2 = (1 << 23) | int(frac2, 2) if exp2 != 0 else int(frac2, 2)
+        if exp1 > exp2:
+            shift = exp1 - exp2
+            M2 >>= shift
+            exp = exp1
+        else:
+            shift = exp2 - exp1
+            M1 >>= shift
+            exp = exp2
+        M_result = M1 + M2
+        if M_result >= (1 << 24):
+            M_result >>= 1
+            exp += 1
+        frac_result = M_result - (1 << 23)
+        exp_bits = format(exp, '08b')
+        frac_bits = format(frac_result, '023b')
+        result_bits = '0' + exp_bits + frac_bits
+        return IEEE754Float(result_bits)
+
+    def __repr__(self):
+        return f"IEEE-754: {self.bits} | Float: {self.value}"
+
+    @staticmethod
+    def _float_to_binary(num):
+        import struct
+        packed = struct.pack('!f', num)
+        return ''.join(f'{b:08b}' for b in packed)
+
+    @staticmethod
+    def _binary_to_float(bstr):
+        import struct
+        bytes_val = bytes(int(bstr[i:i + 8], 2) for i in range(0, 32, 8))
+        return struct.unpack('!f', bytes_val)[0]

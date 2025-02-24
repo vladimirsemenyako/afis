@@ -1,1 +1,1 @@
-from .utils import BinaryNumber
+from .utils import BinaryNumber, IEEE754Float
