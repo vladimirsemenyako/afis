@@ -13,20 +13,19 @@ def incrementBinaryByOne(num):
     num.reverse()
     return num
 
-
 def positiveBinaryConversion(num):
     stack = [num]
     binary = []
     while num > 1:
         num = num // 2
         stack.append(num)
+    print(stack)  # В Python 3 print - это функция
     stack.reverse()
     for binNum in stack:
         binary.append(str(binNum % 2))
     while len(binary) < 8:
         binary.insert(0, "0")
     return "".join(binary)
-
 
 def twoscompliment(num):
     binary = []
@@ -35,19 +34,16 @@ def twoscompliment(num):
     binary = incrementBinaryByOne(binary)
     return "".join(binary)
 
-
 def twoscomplimentForSub(num):
     binary = []
-    num_list = list(num)
+    num_list = list(num)  # split() не нужен
     for element in num_list:
         binary.append('0' if element == '1' else '1')
     binary = incrementBinaryByOne(binary)
     return "".join(binary)
 
-
 def convertToBinary(num):
     return positiveBinaryConversion(num) if num >= 0 else twoscompliment(num)
-
 
 def binaryToInt(binary_str):
     n = len(binary_str)
@@ -65,7 +61,6 @@ def binaryToInt(binary_str):
             if binary_str[i] == '1':
                 num += (1 << (n - 1 - i))
         return num
-
 
 def unsigned_divide(dividend, divisor):
     quotient = 0
@@ -136,7 +131,6 @@ def binary_signed_divide(dividend_bin, divisor_bin):
     remainder_bin = convertToBinary(remainder)
     return (quotient_bin, remainder_bin)
 
-
 def addBinary(num1, num2):
     num1, num2 = list(num1), list(num2)
     added = []
@@ -153,12 +147,10 @@ def addBinary(num1, num2):
     added.reverse()
     return "".join(added)
 
-
 def rightShift(a, q):
     num = a + q
     shifted = [num[0]] + list(num[:-1])
     return "".join(shifted)[:8], "".join(shifted)[8:]
-
 
 def multByBooth(m, q):
     a = "00000000"
@@ -176,19 +168,15 @@ def multByBooth(m, q):
         a, q = rightShift(a, q)
         qNeg0 = q[-1]
         print(a, q, qNeg1)
-
+    return q
 
 def main():
     binaryNum1 = convertToBinary(int(input("Enter the first number: ")))
     binaryNum2 = convertToBinary(int(input("Enter the second number: ")))
     print("Binary form is", binaryNum1)
     print("Binary form is", binaryNum2)
-
+    print(multByBooth(binaryNum1, binaryNum2))
     quotient, remainder = binary_signed_divide(binaryNum1, binaryNum2)
     print("Division Result - Quotient:", quotient, "Remainder:", remainder)
-
-    multByBooth(binaryNum1, binaryNum2)
-
-
 if __name__ == "__main__":
     main()
