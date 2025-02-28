@@ -1,3 +1,5 @@
+import math
+
 class BinaryNumber:
     def __init__(self, value):
         if isinstance(value, int):
@@ -21,7 +23,6 @@ class BinaryNumber:
         other = self._ensure_binary(other)
         return BinaryNumber(BinaryNumber._multiply_by_booth(self.binary, other.binary))
 
-    # Метод деления возвращает строку с бинарным представлением результата (целая часть и дробь)
     def __truediv__(self, other):
         other = self._ensure_binary(other)
         return BinaryNumber._binary_divide_with_fraction(self.to_int(), other.to_int())
@@ -35,7 +36,6 @@ class BinaryNumber:
     def to_int(self):
         return BinaryNumber._binary_to_int(self.binary)
 
-    # Вспомогательные методы (все методы ниже являются статическими)
     @staticmethod
     def _increment_binary_by_one(num_list):
         num_list.reverse()
@@ -67,7 +67,22 @@ class BinaryNumber:
         return "".join(binary)
 
     @staticmethod
-    def _twos_complement(num):
+    def sign_mode(num):
+        num = BinaryNumber._positive_binary_conversion(abs(num))
+        num = '1' + num[1:]
+        return num
+
+    @staticmethod
+    def ones_complement(num):
+        bin_num = []
+        num = BinaryNumber._positive_binary_conversion(abs(num))
+        for bit in num[1:]:
+            bin_num.append('0' if bit == '1' else '1')
+        return '1' + "".join(bin_num)
+
+
+    @staticmethod
+    def twos_complement(num):
         binary = []
         pos_conv = BinaryNumber._positive_binary_conversion(-num)
         for bit in pos_conv:
@@ -88,7 +103,7 @@ class BinaryNumber:
         if num >= 0:
             return BinaryNumber._positive_binary_conversion(num)
         else:
-            return BinaryNumber._twos_complement(num)
+            return BinaryNumber.twos_complement(num)
 
     @staticmethod
     def _binary_to_int(binary_str):
@@ -166,7 +181,6 @@ class IEEE754Float:
     def __add__(self, other):
         if not isinstance(other, IEEE754Float):
             other = IEEE754Float(other)
-        # Извлекаем составляющие (поддерживаются только положительные числа)
         sign1, exp1, frac1 = self.bits[0], int(self.bits[1:9], 2), self.bits[9:]
         sign2, exp2, frac2 = other.bits[0], int(other.bits[1:9], 2), other.bits[9:]
         if sign1 != '0' or sign2 != '0':
@@ -196,12 +210,35 @@ class IEEE754Float:
 
     @staticmethod
     def _float_to_binary(num):
-        import struct
-        packed = struct.pack('!f', num)
-        return ''.join(f'{b:08b}' for b in packed)
+        if num == 0.0:
+            return "0" * 32
+        sign_bit = '0' if num >= 0 else '1'
+        num_abs = abs(num)
+        m, e = math.frexp(num_abs)
+        bias = 127
+        exponent = e - 1 + bias
+
+        if exponent <= 0:
+            exponent = 0
+            fraction = int(num_abs / (2 ** (1 - bias)) * (1 << 23))
+        else:
+            fraction = int(((m * 2) - 1) * (1 << 23))
+
+        exponent_bits = format(exponent, '08b')
+        fraction_bits = format(fraction, '023b')
+        return sign_bit + exponent_bits + fraction_bits
 
     @staticmethod
     def _binary_to_float(bstr):
-        import struct
-        bytes_val = bytes(int(bstr[i:i + 8], 2) for i in range(0, 32, 8))
-        return struct.unpack('!f', bytes_val)[0]
+        sign = int(bstr[0])
+        exponent = int(bstr[1:9], 2)
+        fraction = int(bstr[9:], 2)
+        bias = 127
+
+        if exponent == 0:
+            value = fraction / (1 << 23) * (2 ** (1 - bias))
+        else:
+            value = (1 + fraction / (1 << 23)) * (2 ** (exponent - bias))
+        if sign == 1:
+            value = -value
+        return value

@@ -31,8 +31,13 @@ class BinaryTest(unittest.TestCase):
         self.assertEqual(str(binary_num_1 - binary_num_2), '11110111 (-9)')
 
     def test_ieee754(self):
-        num_1 = api.IEEE754Float(4.6)
-        num_2 = api.IEEE754Float(4.4)
-        self.assertEqual(str(num_1 + num_2), 'IEEE-754: 01000001000100000000000000000000 | Float: 9.0')
+        num_1 = api.IEEE754Float(2.0)
+        num_2 = api.IEEE754Float(3.0)
+        self.assertEqual(str(num_1 + num_2), 'IEEE-754: 01000000101000000000000000000000 | Float: 5.0')
+
+    def test_ieee754_with_zero(self):
+        num_1 = api.IEEE754Float(0.0)
+        num_2 = api.IEEE754Float(3.0)
+        self.assertEqual(str(num_1 + num_2), 'IEEE-754: 01000000010000000000000000000000 | Float: 3.0')
 if __name__ == '__main__':
     unittest.main()
