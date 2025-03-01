@@ -2,15 +2,11 @@ import itertools
 from lab_2.api import BooleanLogicAPI
 
 class BooleanLogicCLI:
-    """
-    CLI class for displaying Boolean logic outputs.
-    Provides a method for generating a formatted truth table and for printing all results.
-    """
+
     @staticmethod
     def generate_truth_table(expression: str, logic_expr_col_width: int = None) -> str:
         tokens = BooleanLogicAPI.to_rpn(expression)
         variables = sorted({token for token in tokens if token.isalpha() and token not in BooleanLogicAPI.precedence})
-        # Create header using a dummy assignment.
         dummy_assignment = {var: False for var in variables}
         _, sample_log, sample_final_expr = BooleanLogicAPI.eval_rpn_with_log(tokens, dummy_assignment)
         headers = variables + [subexpr for subexpr, _ in sample_log] + [sample_final_expr]

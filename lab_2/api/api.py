@@ -1,10 +1,7 @@
 import itertools
 
 class BooleanLogicAPI:
-    """
-    API class for Boolean logic operations.
-    Contains methods for RPN conversion, evaluation, and canonical form generation.
-    """
+
     precedence = {'!': 1, '&': 2, '|': 3, '>': 4, '~': 5}
 
     @staticmethod
