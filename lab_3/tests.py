@@ -14,7 +14,6 @@ class TestMinimizationLogic(unittest.TestCase):
         }
 
     def test_get_variables(self):
-        # Тест извлечения переменных
         expression = self.test_expressions['complex']
         variables = MinimizationLogic.get_variables(expression)
         self.assertEqual(set(variables), {'a', 'b', 'c', 'd', 'e'})
@@ -136,11 +135,10 @@ class TestMinimizationLogic(unittest.TestCase):
         
         # Тест для СДНФ
         pdnf_groups = MinimizationLogic.find_groups(variables, truth_values, is_pdnf=True)
-        self.assertEqual(len(pdnf_groups), 2)  # Должно быть 2 группы для единиц
-        
+        self.assertEqual(len(pdnf_groups), 2)
         # Тест для СКНФ
         pcnf_groups = MinimizationLogic.find_groups(variables, truth_values, is_pdnf=False)
-        self.assertEqual(len(pcnf_groups), 2)  # Должно быть 2 группы для нулей
+        self.assertEqual(len(pcnf_groups), 2)
 
 
 if __name__ == '__main__':
